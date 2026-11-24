@@ -1,0 +1,74 @@
+{
+  "name": "Lynn Resumes - Publish Reel (Claude, on demand)",
+  "_note": "Exported from Make and sanitised: connection IDs, page IDs and account IDs are replaced with placeholders.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "mapper": null,
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 2,
+              "module": "facebook-pages:uploadAReel",
+              "version": 6,
+              "parameters": { "__IMTCONN__": "<FACEBOOK_CONNECTION_ID>" },
+              "filter": {
+                "name": "Facebook requested",
+                "conditions": [[{ "a": "{{var.input.platforms}}", "b": "facebook", "o": "text:contain:ci" }]]
+              },
+              "mapper": {
+                "page_id": "<FACEBOOK_PAGE_ID>",
+                "url": "{{var.input.video_url}}",
+                "title": "{{var.input.title}}",
+                "description": "{{var.input.fb_caption}}",
+                "uploadMethod": "url"
+              },
+              "onerror": [{ "id": 4, "module": "builtin:Ignore", "version": 1 }]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 3,
+              "module": "instagram-business:CreateAReelPost",
+              "version": 1,
+              "parameters": { "__IMTCONN__": "<FACEBOOK_CONNECTION_ID>" },
+              "filter": {
+                "name": "Instagram requested",
+                "conditions": [[{ "a": "{{var.input.platforms}}", "b": "instagram", "o": "text:contain:ci" }]]
+              },
+              "mapper": {
+                "accountId": "<INSTAGRAM_BUSINESS_ACCOUNT_ID>",
+                "caption": "{{var.input.ig_caption}}",
+                "video_url": "{{var.input.video_url}}",
+                "share_to_feed": true
+              },
+              "onerror": [{ "id": 5, "module": "builtin:Ignore", "version": 1 }]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "scheduling": { "type": "on-demand" },
+  "metadata": {
+    "version": 1,
+    "instant": false,
+    "scenario": { "maxErrors": 3, "autoCommit": true, "roundtrips": 1, "sequential": false, "dlq": false, "dataloss": false, "confidential": false, "freshVariables": false, "autoCommitTriggerLast": true }
+  },
+  "interface": {
+    "input": [
+      { "name": "post_id", "type": "text", "label": "Post ID", "required": true },
+      { "name": "platforms", "type": "text", "label": "Platforms (facebook,instagram)", "default": "facebook,instagram", "required": true },
+      { "name": "video_url", "type": "text", "label": "Public MP4 URL (9:16)", "required": true },
+      { "name": "title", "type": "text", "label": "Reel title (Facebook)" },
+      { "name": "fb_caption", "type": "text", "label": "Facebook caption", "multiline": true },
+      { "name": "ig_caption", "type": "text", "label": "Instagram caption", "multiline": true }
+    ],
+    "output": []
+  }
+}

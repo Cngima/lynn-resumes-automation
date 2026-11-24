@@ -1,0 +1,122 @@
+{
+  "name": "Lynn Resumes - Publish Post (Claude, on demand)",
+  "_note": "Exported from Make and sanitised: connection IDs, page IDs and account IDs are replaced with placeholders. Import into Make, then reconnect your own Facebook, Instagram and LinkedIn connections.",
+  "flow": [
+    {
+      "id": 1,
+      "module": "builtin:BasicRouter",
+      "version": 1,
+      "mapper": null,
+      "routes": [
+        {
+          "flow": [
+            {
+              "id": 2,
+              "module": "facebook-pages:CreatePostWithPhotos",
+              "version": 6,
+              "parameters": { "__IMTCONN__": "<FACEBOOK_CONNECTION_ID>" },
+              "filter": {
+                "name": "Facebook requested",
+                "conditions": [[{ "a": "{{var.input.platforms}}", "b": "facebook", "o": "text:contain:ci" }]]
+              },
+              "mapper": {
+                "page_id": "<FACEBOOK_PAGE_ID>",
+                "message": "{{var.input.fb_caption}}",
+                "photos": [{ "url": "{{var.input.image_url}}", "type": "url" }]
+              },
+              "onerror": [{ "id": 5, "module": "builtin:Ignore", "version": 1 }]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 3,
+              "module": "instagram-business:CreatePostPhoto",
+              "version": 1,
+              "parameters": { "__IMTCONN__": "<FACEBOOK_CONNECTION_ID>" },
+              "filter": {
+                "name": "Instagram requested",
+                "conditions": [[{ "a": "{{var.input.platforms}}", "b": "instagram", "o": "text:contain:ci" }]]
+              },
+              "mapper": {
+                "accountId": "<INSTAGRAM_BUSINESS_ACCOUNT_ID>",
+                "caption": "{{var.input.ig_caption}}",
+                "image_url": "{{var.input.image_url}}"
+              },
+              "onerror": [{ "id": 6, "module": "builtin:Ignore", "version": 1 }]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 4,
+              "module": "linkedin:CreateCompanyImagePost",
+              "version": 2,
+              "parameters": { "__IMTCONN__": "<LINKEDIN_CONNECTION_ID>" },
+              "filter": {
+                "name": "LinkedIn page requested",
+                "conditions": [[{ "a": "{{var.input.platforms}}", "b": "linkedin_page", "o": "text:contain:ci" }]]
+              },
+              "mapper": {
+                "organization": "urn:li:organization:<LINKEDIN_ORG_ID>",
+                "url": "{{var.input.image_url}}",
+                "method": "link",
+                "altText": "{{var.input.alt_text}}",
+                "content": "{{var.input.li_caption}}",
+                "visibility": "PUBLIC",
+                "feedDistribution": "MAIN_FEED",
+                "isReshareDisabledByAuthor": false
+              },
+              "onerror": [{ "id": 7, "module": "builtin:Ignore", "version": 1 }]
+            }
+          ]
+        },
+        {
+          "flow": [
+            {
+              "id": 8,
+              "module": "linkedin:ShareImage",
+              "version": 2,
+              "parameters": { "__IMTCONN__": "<LINKEDIN_CONNECTION_ID>" },
+              "filter": {
+                "name": "LinkedIn personal requested",
+                "conditions": [[{ "a": "{{var.input.platforms}}", "b": "linkedin_personal", "o": "text:contain:ci" }]]
+              },
+              "mapper": {
+                "url": "{{var.input.image_url}}",
+                "method": "link",
+                "altText": "{{var.input.alt_text}}",
+                "content": "{{var.input.li_personal_caption}}",
+                "visibility": "PUBLIC",
+                "feedDistribution": "MAIN_FEED",
+                "isReshareDisabledByAuthor": false
+              },
+              "onerror": [{ "id": 9, "module": "builtin:Ignore", "version": 1 }]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "scheduling": { "type": "on-demand" },
+  "metadata": {
+    "version": 1,
+    "instant": false,
+    "scenario": { "maxErrors": 3, "autoCommit": true, "roundtrips": 1, "sequential": false, "dlq": false, "dataloss": false, "confidential": false, "freshVariables": false, "autoCommitTriggerLast": true }
+  },
+  "interface": {
+    "input": [
+      { "name": "post_id", "type": "text", "label": "Post ID", "required": true },
+      { "name": "platforms", "type": "text", "label": "Platforms (comma list: facebook,instagram,linkedin_page,linkedin_personal)", "default": "facebook,instagram,linkedin_page,linkedin_personal", "required": true },
+      { "name": "image_url", "type": "text", "label": "Public image URL (JPEG/PNG)", "required": true },
+      { "name": "fb_caption", "type": "text", "label": "Facebook caption", "multiline": true },
+      { "name": "ig_caption", "type": "text", "label": "Instagram caption", "multiline": true },
+      { "name": "li_caption", "type": "text", "label": "LinkedIn page caption", "multiline": true },
+      { "name": "li_personal_caption", "type": "text", "label": "LinkedIn personal caption", "multiline": true },
+      { "name": "alt_text", "type": "text", "label": "Image alt text" }
+    ],
+    "output": []
+  }
+}
